@@ -1,0 +1,3 @@
+migration/output/
+*.log
+node_modules/
