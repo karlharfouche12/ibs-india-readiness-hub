@@ -1,0 +1,58 @@
+name: Deploy to Azure App Service
+
+# Deploys only from main, after the pull request is merged. Feature branches are not deployed.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: azure-app-service-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build UI
+        run: npm run build
+
+      # The app is built here, so App Service only runs it. Set SCM_DO_BUILD_DURING_DEPLOYMENT=false on the app.
+      - name: Prepare deployment package
+        run: |
+          mkdir deploy-package
+          cp -r dist server deploy-package/
+          cp package.json package-lock.json deploy-package/
+          cd deploy-package
+          npm ci --omit=dev
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: deploy-package

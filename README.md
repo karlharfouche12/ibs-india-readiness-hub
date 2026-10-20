@@ -32,6 +32,6 @@ npm test
 
 ## Not done yet
 
-- Azure App Service hosting, the GitHub Actions deploy workflow and Entra ID sign-in need platform approval and setup.
+- Azure App Service hosting and Entra ID sign-in need platform approval and setup. The deploy workflow is in `.github/workflows/azure-app-service.yml`, and the IT checklist is in [docs/deploy-azure.md](docs/deploy-azure.md).
 - The prototype's Outlook email capture review, reports, decisions log, weekly review and governance settings are not ported yet.
 - UI components should move to the Maersk Design System before go-live.

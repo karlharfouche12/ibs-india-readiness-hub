@@ -1,5 +1,6 @@
 // HTTP server: API under /api, built UI from dist/ everywhere else.
-// Usage: npm run build && npm start   (env: PORT, HUB_DB_PATH, HUB_DEV_USER)
+// Usage: npm run build && npm start
+// Env: PORT, HUB_HOST, HUB_DB_PATH (must sit outside the deployed folder on App Service), HUB_DEV_USER (local only).
 import { createServer } from 'node:http';
 import { readFileSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve, dirname } from 'node:path';
@@ -114,7 +115,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const count = db.prepare('SELECT COUNT(*) AS n FROM items').get().n;
   if (count === 0) console.warn('The database is empty. Run: npm run seed -- <importer output dir>');
   const port = Number(process.env.PORT || 8787);
-  const host = process.env.HUB_HOST || '127.0.0.1';
+  // Azure App Service reaches the app only on all interfaces. Locally, stay on loopback.
+  const runningInAzure = Boolean(process.env.WEBSITE_SITE_NAME);
+  const host = process.env.HUB_HOST || (runningInAzure || process.env.PORT ? '0.0.0.0' : '127.0.0.1');
   createHubServer(db).listen(port, host, () => {
     console.log(`IBS India readiness hub on http://${host}:${port} (database: ${dbPath})`);
   });
